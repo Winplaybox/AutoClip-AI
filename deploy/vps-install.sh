@@ -9,6 +9,7 @@ APP=/opt/ovd-backend
 SVC=ovd-backend
 PORT=8000
 SRC=/opt/anydownloader-src
+REF=${REF:-main}   # anydownloader branch to take the module from (default main)
 BKROOT=/root/backups
 SECRET_FILE=/etc/ovd-autoclip.secret
 DROPIN=/etc/systemd/system/$SVC.service.d/autoclip.conf
@@ -55,9 +56,9 @@ if [ -f "$APP/auth.db" ]; then
 fi
 du -sh "$BK" | cut -f1
 
-say "2/7 fetch AutoClip module (anydownloader main)"
+say "2/7 fetch AutoClip module (anydownloader $REF)"
 if [ -d "$SRC/.git" ]; then
-  git -C "$SRC" fetch -q --depth 1 origin main && git -C "$SRC" reset -q --hard origin/main
+  git -C "$SRC" fetch -q --depth 1 origin "$REF" && git -C "$SRC" reset -q --hard FETCH_HEAD
 else
   rm -rf "$SRC"; git clone -q --depth 1 https://github.com/Winplaybox/anydownloader.git "$SRC"
 fi
