@@ -38,6 +38,69 @@ LOCK = threading.Lock()
 OPTS = {"browser": None, "cookies": None}
 
 
+def app_dir() -> str:
+    base = os.environ.get("LOCALAPPDATA") or os.path.expanduser("~/.local/share")
+    d = os.path.join(base, "AutoClipHelper")
+    os.makedirs(d, exist_ok=True)
+    return d
+
+
+FFMPEG_URL = "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
+
+
+def ensure_ffmpeg() -> None:
+    """Windows: fetch the official yt-dlp ffmpeg build once so users never install anything."""
+    if shutil.which("ffmpeg"):
+        return
+    d = app_dir()
+    exe = os.path.join(d, "ffmpeg.exe")
+    if sys.platform == "win32" and not os.path.isfile(exe):
+        import urllib.request
+        import zipfile
+
+        print("First run: downloading ffmpeg (about 130 MB, one time)...")
+        zp = os.path.join(d, "ffmpeg.zip")
+        try:
+            urllib.request.urlretrieve(FFMPEG_URL, zp)
+            with zipfile.ZipFile(zp) as z:
+                for n in z.namelist():
+                    if n.endswith("/bin/ffmpeg.exe") or n.endswith("/bin/ffprobe.exe"):
+                        with z.open(n) as src, open(os.path.join(d, os.path.basename(n)), "wb") as out:
+                            shutil.copyfileobj(src, out)
+        except Exception as e:  # noqa: BLE001
+            print("Could not download ffmpeg:", type(e).__name__, "- continuing in basic mode")
+        finally:
+            try:
+                os.unlink(zp)
+            except OSError:
+                pass
+    if os.path.isfile(exe):
+        os.environ["PATH"] = d + os.pathsep + os.environ.get("PATH", "")
+
+
+def set_autostart(on: bool) -> None:
+    if sys.platform != "win32":
+        print("Autostart is only available on Windows.")
+        return
+    import winreg
+
+    key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run", 0,
+                         winreg.KEY_SET_VALUE)
+    try:
+        if on:
+            exe = sys.executable if getattr(sys, "frozen", False) else f'"{sys.executable}" "{os.path.abspath(__file__)}"'
+            winreg.SetValueEx(key, "AutoClipHelper", 0, winreg.REG_SZ, exe if getattr(sys, "frozen", False) else exe)
+            print("AutoClip Helper will now start with Windows.")
+        else:
+            try:
+                winreg.DeleteValue(key, "AutoClipHelper")
+            except FileNotFoundError:
+                pass
+            print("Autostart removed.")
+    finally:
+        winreg.CloseKey(key)
+
+
 def origin_ok(origin: str) -> bool:
     return origin in ALLOWED_ORIGINS or bool(ALLOWED_ORIGIN_RE.match(origin or ""))
 
@@ -219,17 +282,21 @@ def main() -> None:
     ap.add_argument("--browser", choices=["chrome", "edge", "firefox", "brave", "opera", "vivaldi", "safari"],
                     help="read YouTube cookies from this browser, locally (only if YouTube asks you to sign in)")
     ap.add_argument("--port", type=int, default=PORT)
+    ap.add_argument("--autostart", choices=["on", "off"], help="start the helper automatically when Windows starts")
     a = ap.parse_args()
+    if a.autostart:
+        return set_autostart(a.autostart == "on")
     OPTS["browser"] = a.browser
     cf = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cookies.txt")
     if os.path.isfile(cf):
         OPTS["cookies"] = cf
     os.makedirs(WORK, exist_ok=True)
+    ensure_ffmpeg()
     srv = ThreadingHTTPServer(("127.0.0.1", a.port), Handler)
     print(f"AutoClip Helper {VERSION} running on http://127.0.0.1:{a.port}")
     print("Keep this window open. Open the AutoClip website and paste a link.")
     if not shutil.which("ffmpeg"):
-        print("Note: ffmpeg not found. Install it for best quality:  winget install ffmpeg")
+        print("Note: ffmpeg not found, so quality is limited. Install it: winget install ffmpeg")
     try:
         srv.serve_forever()
     except KeyboardInterrupt:

@@ -1,0 +1,43 @@
+name: Build AutoClip Helper (Windows .exe)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["helper/**", ".github/workflows/helper.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build single-file exe (yt-dlp bundled)
+        run: |
+          python -m pip install --upgrade pip pyinstaller yt-dlp
+          python -m PyInstaller --onefile --name AutoClipHelper --collect-all yt_dlp helper/autoclip_helper.py
+      - name: Smoke test (starts, answers /ping, refuses unknown origins)
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist/AutoClipHelper.exe -PassThru -WindowStyle Hidden
+          Start-Sleep -Seconds 8
+          $r = Invoke-RestMethod -Uri http://127.0.0.1:8791/ping -Headers @{Origin="https://winplaybox.github.io"}
+          if ($r.helper -ne "autoclip") { throw "ping failed" }
+          try { Invoke-RestMethod -Uri http://127.0.0.1:8791/ping -Headers @{Origin="https://evil.example"}; throw "origin not blocked" } catch { if ($_.Exception.Message -eq "origin not blocked") { throw } }
+          Stop-Process -Id $p.Id -Force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AutoClipHelper
+          path: dist/AutoClipHelper.exe
+      - name: Publish release "helper-latest"
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete helper-latest --yes --cleanup-tag 2>$null
+          gh release create helper-latest dist/AutoClipHelper.exe --title "AutoClip Helper (Windows)" --notes "Double-click AutoClipHelper.exe and keep it running. Downloads links on your PC." --target ${{ github.sha }}

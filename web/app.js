@@ -315,8 +315,8 @@
       el.style.color = "";
       el.append("YouTube often blocks downloads from our server. Run the ");
       const a = document.createElement("a");
-      a.href = "https://github.com/Winplaybox/AutoClip-AI/tree/main/helper"; a.target = "_blank"; a.rel = "noopener noreferrer";
-      a.textContent = "AutoClip Helper";
+      a.href = "https://github.com/Winplaybox/AutoClip-AI/releases/download/helper-latest/AutoClipHelper.exe"; a.target = "_blank"; a.rel = "noopener noreferrer";
+      a.textContent = "AutoClip Helper (Windows, one click)";
       el.append(a, " on your PC to download links locally, or upload the video file (always works).");
     }
   }
