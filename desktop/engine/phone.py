@@ -1,3 +1,4 @@
+from atomicfile import write_text_atomic
 """Phone remote: use NeonClipping from a phone on the same Wi-Fi.
 
 The heavy work (recording, speech, rendering) always happens on the PC. The phone is a remote control and viewer:
@@ -81,9 +82,7 @@ def attach(app, data, root):
 
     def new_pin():
         j = {'pin': f'{secrets.randbelow(10**6):06d}', 'salt': secrets.token_hex(16)}
-        tmp = store.with_suffix('.tmp')
-        tmp.write_text(json.dumps(j), encoding='utf-8')
-        tmp.replace(store)
+        write_text_atomic(store, json.dumps(j))
         return j
 
     def token(j):
