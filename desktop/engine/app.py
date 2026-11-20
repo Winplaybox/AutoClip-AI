@@ -54,14 +54,28 @@ def media(id:str):
  return FileResponse(p,media_type='video/mp4')
 @app.get('/assets/{name}')
 def assets(name:str):
- if name not in ('app.js','style.css','extras.js','transcripts.js','vision.js'):raise HTTPException(404)
+ if name not in ('app.js','style.css','extras.js','transcripts.js','vision.js','ovd.css','ovd.js','theme.js'):raise HTTPException(404)
  return FileResponse(ROOT/name)
+@app.get('/fonts/{name}')
+def fonts(name:str):
+ import re as _re
+ p=ROOT/'fonts'/name
+ if not _re.fullmatch(r'[a-z0-9-]+\.woff2',name) or not p.is_file():raise HTTPException(404)
+ return FileResponse(p,media_type='font/woff2',headers={'Cache-Control':'public, max-age=31536000, immutable'})
+@app.get('/about')
+def about():
+ lic=''
+ for c in (ROOT/'NEONCLIPPING-LICENSE',ROOT.parent/'NEONCLIPPING-LICENSE',ROOT/'LICENSE.neonclipping'):
+  try:lic=c.read_text(encoding='utf-8');break
+  except OSError:pass
+ import html as _h
+ return HTMLResponse('<!doctype html><meta charset=utf-8><title>Licences</title><body style="font:15px system-ui;max-width:720px;margin:40px auto;padding:0 18px"><h1>AutoClip Desktop</h1><p>By <a href="https://winplaybox.in">WinPlayBox</a>. The clip engine is based on the MIT-licensed NeonClipping project by Ajay K Meena, used under the licence below. Also uses yt-dlp, FFmpeg, faster-whisper, OpenCV and other open-source software.</p><pre style="white-space:pre-wrap;background:#f4f4f5;padding:14px;border-radius:12px">'+_h.escape(lic or 'MIT licence text: see the NEONCLIPPING-LICENSE file shipped with this app.')+'</pre><p><a href="/">Back</a></p>')
 @app.get('/text/{id}/{kind}')
 def text_file(id:str,kind:str):
  if not id.isalnum() or kind not in ('srt','ass','vtt'):raise HTTPException(404)
  p=DATA/(id+'.'+kind)
  if not p.exists():raise HTTPException(404)
- return FileResponse(p,filename='neonclipping-'+id+'.'+kind)
+ return FileResponse(p,filename='autoclip-'+id+'.'+kind)
 @app.get('/library')
 def library():
  records=[]
@@ -71,7 +85,7 @@ def library():
   try:
    j=json.loads(f.read_text());result=j.get('result',{})
    if result.get('status')=='done' and not j.get('superseded_by') and (DATA/(f.stem+'.mp4')).exists():
-    records.append({'id':f.stem,'title':j.get('settings',{}).get('title') or 'NeonClipping clip','created':f.stat().st_mtime,'meta':result.get('meta',{}),'settings':j.get('settings',{}),'srt':bool(result.get('srt')) and (DATA/(f.stem+'.srt')).exists(),**app.reedit_metadata(f.stem,j,groups)})
+    records.append({'id':f.stem,'title':j.get('settings',{}).get('title') or 'AutoClip clip','created':f.stat().st_mtime,'meta':result.get('meta',{}),'settings':j.get('settings',{}),'srt':bool(result.get('srt')) and (DATA/(f.stem+'.srt')).exists(),**app.reedit_metadata(f.stem,j,groups)})
   except (ValueError,OSError):pass
  return sorted(records,key=lambda j:j['created'],reverse=True)
 
@@ -495,9 +509,20 @@ def donate():
  try:cfg=json.loads((ROOT/'donate.json').read_text(encoding='utf-8'))
  except (OSError,ValueError):pass
  out={}
- for k in ('razorpay','paypal'):
+ for k in ('razorpay','paypal','dodo'):
   v=str(os.environ.get('NEONCLIPPING_DONATE_'+k.upper()) or cfg.get(k) or '').strip()
-  if v.startswith('https://') and len(v)<300 and ' ' not in v:out[k]=v
+  if v.startswith('https://') and len(v)<300 and ' ' not in v:
+   if k=='dodo':
+    from urllib.parse import urlparse
+    host=(urlparse(v).hostname or '').lower()
+    # live Dodo Payments checkout only (test.* hosts are refused so a test link can never ship)
+    if not (host=='dodopayments.com' or host.endswith('.dodopayments.com')) or host.startswith('test.'):continue
+   out[k]=v
+ if out.get('dodo'):
+  try:
+   g=int(cfg.get('goal') or 0)
+   if 0<g<=10**9:out['goal']=g;out['currency']=str(cfg.get('currency') or 'INR')[:3].upper()
+  except (TypeError,ValueError):pass
  return out
 
 @app.post('/feedback')
