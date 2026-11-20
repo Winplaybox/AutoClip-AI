@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: 20
       - name: Syntax check
-        run: node --check web/app.js && node --check web/config.js
+        run: node --check web/app.js && node --check web/theme.js && node --check web/config.js
 
   deploy:
     needs: check

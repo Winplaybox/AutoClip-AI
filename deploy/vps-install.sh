@@ -9,10 +9,11 @@ APP=/opt/ovd-backend
 SVC=ovd-backend
 PORT=8000
 SRC=/opt/anydownloader-src
+REF=${REF:-main}   # anydownloader branch to take the module from (default main)
 BKROOT=/root/backups
 SECRET_FILE=/etc/ovd-autoclip.secret
 DROPIN=/etc/systemd/system/$SVC.service.d/autoclip.conf
-RAW=https://raw.githubusercontent.com/Winplaybox/AutoClip-AI/main/deploy
+RAW=${RAW:-https://raw.githubusercontent.com/Winplaybox/AutoClip-AI/main/deploy}
 say() { printf '\n== %s\n' "$*"; }
 
 health_wait() {
@@ -55,9 +56,9 @@ if [ -f "$APP/auth.db" ]; then
 fi
 du -sh "$BK" | cut -f1
 
-say "2/7 fetch AutoClip module (anydownloader main)"
+say "2/7 fetch AutoClip module (anydownloader $REF)"
 if [ -d "$SRC/.git" ]; then
-  git -C "$SRC" fetch -q --depth 1 origin main && git -C "$SRC" reset -q --hard origin/main
+  git -C "$SRC" fetch -q --depth 1 origin "$REF" && git -C "$SRC" reset -q --hard FETCH_HEAD
 else
   rm -rf "$SRC"; git clone -q --depth 1 https://github.com/Winplaybox/anydownloader.git "$SRC"
 fi
@@ -76,6 +77,10 @@ rm -rf "$APP/backend/autoclip"
 cp -a "$SRC/backend/autoclip" "$APP/backend/autoclip"
 cp -a "$SRC/backend/routes_autoclip.py" "$APP/backend/routes_autoclip.py"
 find "$APP/backend/autoclip" -name __pycache__ -prune -exec rm -rf {} +
+# Caption fonts for scripts we do not bundle (Thai, Hebrew, CJK, Sinhala). Optional: never fails the deploy.
+if ! fc-list 2>/dev/null | grep -qi "noto sans cjk"; then
+  DEBIAN_FRONTEND=noninteractive apt-get install -y -qq fonts-noto-core fonts-noto-cjk >/dev/null 2>&1 && fc-cache -f >/dev/null 2>&1 || echo "note: optional caption fonts not installed"
+fi
 python3 /tmp/patch_vps.py "$APP"
 
 say "5/7 OpenCV (face-aware crop), keep numpy as is"
