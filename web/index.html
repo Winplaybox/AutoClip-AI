@@ -1,114 +1,176 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>AutoClip AI — turn long videos into viral Shorts | WinPlayBox</title>
-  <meta name="description" content="Paste a YouTube link or upload a video. AutoClip AI finds the best moments, crops them to 9:16, adds animated captions and a hook, and writes titles and hashtags. Free.">
-  <meta name="theme-color" content="#0E0F13">
-  <meta property="og:title" content="AutoClip AI — long video to Shorts in one click">
-  <meta property="og:description" content="AI picks the best moments, crops to 9:16, adds captions + hook. Free by WinPlayBox.">
-  <meta property="og:type" content="website">
+  <title>AutoClip AI — long videos to viral Shorts, with your own AI key | WinPlayBox</title>
+  <meta name="description" content="Turn any long video into captioned 9:16 Shorts. Face-aware framing, 45 languages, animated captions. Bring your own AI key (Gemini, OpenAI, Groq, OpenRouter, Claude). Free by WinPlayBox.">
+  <meta name="theme-color" content="#FFFFFF" id="themeColor">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://api.winplaybox.in http://localhost:* http://127.0.0.1:*; media-src https://api.winplaybox.in http://localhost:* http://127.0.0.1:*; connect-src https://api.winplaybox.in http://localhost:* http://127.0.0.1:*; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Instrument+Sans:wght@400..700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script src="theme.js"></script>
   <script src="config.js"></script>
   <script src="app.js" defer></script>
 </head>
 <body>
   <header class="top">
-    <a class="brand" href="./" aria-label="AutoClip AI home">
-      <img src="assets/favicon.svg" alt="" width="28" height="28">
-      <span>AutoClip <b>AI</b></span>
+    <a class="brand" href="#/" aria-label="AutoClip AI home">
+      <img src="assets/favicon.svg" alt="" width="28" height="28"><span>AutoClip <b>AI</b></span>
     </a>
-    <div class="status" id="status" title="Server status"><i></i><span>Checking…</span></div>
+    <nav class="nav" aria-label="Main">
+      <a href="#/" data-nav="create">Create</a>
+      <a href="#/keys" data-nav="keys">Get an API key</a>
+      <a href="#/speech" data-nav="speech">Speech &amp; languages</a>
+    </nav>
+    <div class="top-right">
+      <span class="status" id="status" title="Server status"><i></i><span>Checking…</span></span>
+      <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch light / dark theme">◐</button>
+    </div>
   </header>
 
   <main>
-    <section class="hero">
-      <h1>Long video in. <span>Viral Shorts</span> out.</h1>
-      <p>AI finds the moments worth posting, crops them to 9:16, adds animated captions and a hook, and writes the title and hashtags.</p>
-    </section>
-
-    <form id="form" class="card" novalidate>
-      <div class="tabs" role="tablist">
-        <button type="button" role="tab" class="tab active" data-tab="link" aria-selected="true">Paste link</button>
-        <button type="button" role="tab" class="tab" data-tab="file" aria-selected="false">Upload file</button>
+    <!-- ============================ CREATE ============================ -->
+    <section class="view" data-view="create">
+      <div class="hero">
+        <h1>Long video in. <span>Viral Shorts</span> out.</h1>
+        <p>Face-aware 9:16 crop, animated captions in 45 languages, a hook, title and hashtags for every clip.</p>
       </div>
 
-      <div class="pane" data-pane="link">
-        <label class="sr" for="url">Video link</label>
-        <input id="url" type="url" inputmode="url" autocomplete="off" placeholder="https://www.youtube.com/watch?v=…  (YouTube, Twitch, Kick, Vimeo, Instagram…)">
-      </div>
-      <div class="pane hidden" data-pane="file">
-        <label class="drop" id="drop">
-          <input id="file" type="file" accept="video/*,.mkv,.ts,.flv">
-          <span class="drop-icon" aria-hidden="true">⬆</span>
-          <span id="dropText">Drop a video here or <u>browse</u></span>
-          <small id="dropHint">MP4, MOV, MKV, WEBM</small>
-        </label>
+      <div id="keyBanner" class="banner hidden" role="status">
+        <b>Add your AI key for smart picks.</b>
+        <span>Without one, clips are chosen by audio energy only. Your key stays in this browser.</span>
+        <a class="btn ghost sm" href="#/keys">How to get a key</a>
       </div>
 
-      <details class="opts" open>
-        <summary>Clip settings</summary>
-        <div class="grid">
-          <label>Clips
-            <div class="range"><input id="maxClips" type="range" min="1" max="12" value="5"><output id="maxClipsOut">5</output></div>
+      <form id="form" class="paste" novalidate>
+        <div class="tabs" role="tablist">
+          <button type="button" role="tab" class="tab active" data-tab="file" aria-selected="true">Upload video</button>
+          <button type="button" role="tab" class="tab" data-tab="link" aria-selected="false">Paste link</button>
+        </div>
+
+        <div class="pane" data-pane="file">
+          <label class="drop" id="drop">
+            <input id="file" type="file" accept="video/*,.mkv,.ts,.flv">
+            <span class="drop-icon" aria-hidden="true">↑</span>
+            <span id="dropText">Drop a video here or <u>browse</u></span>
+            <small id="dropHint">MP4, MOV, MKV, WEBM</small>
           </label>
-          <label>Length (seconds)
-            <div class="pair">
-              <input id="minLen" type="number" min="8" max="90" value="20" aria-label="Minimum length">
-              <span>to</span>
-              <input id="maxLen" type="number" min="15" max="180" value="60" aria-label="Maximum length">
+        </div>
+        <div class="pane hidden" data-pane="link">
+          <label class="sr" for="url">Video link</label>
+          <input id="url" type="url" inputmode="url" autocomplete="off" placeholder="https://… (YouTube, Twitch, Kick, Vimeo, Instagram, TikTok)">
+          <p class="hint">Some sites block downloads from our server (YouTube often does). If a link fails, upload the file instead — uploads always work.</p>
+        </div>
+
+        <details class="opts" id="aiBox" open>
+          <summary>AI provider <span class="pill" id="keyPill">no key</span></summary>
+          <div class="grid">
+            <label>Provider
+              <select id="aiProvider"></select>
+            </label>
+            <label>Model <small>(optional)</small>
+              <input id="aiModel" type="text" maxlength="80" autocomplete="off" spellcheck="false" placeholder="default">
+            </label>
+          </div>
+          <label>API key
+            <div class="keyrow">
+              <input id="aiKey" type="password" autocomplete="off" spellcheck="false" maxlength="300" placeholder="Paste your key">
+              <button type="button" class="btn ghost" id="keyTest">Test key</button>
             </div>
           </label>
-          <label>Spoken language
-            <select id="language"></select>
+          <label class="switch"><input id="aiRemember" type="checkbox" checked><span>Remember on this device</span></label>
+          <p class="hint" id="keyMsg">Your key is sent only with your own jobs, kept in server memory while the job runs, then deleted. <a href="#/keys">Where do I get one?</a></p>
+        </details>
+
+        <details class="opts" open>
+          <summary>Clip settings</summary>
+          <div class="grid">
+            <label>Clips
+              <div class="range"><input id="maxClips" type="range" min="1" max="12" value="5"><output id="maxClipsOut">5</output></div>
+            </label>
+            <label>Length (seconds)
+              <div class="pair">
+                <input id="minLen" type="number" min="8" max="90" value="20" aria-label="Minimum length">
+                <span>to</span>
+                <input id="maxLen" type="number" min="15" max="180" value="60" aria-label="Maximum length">
+              </div>
+            </label>
+            <label>Spoken language
+              <select id="language"></select>
+            </label>
+            <label>Speech model
+              <select id="sttModel"><option value="auto">Server default</option></select>
+            </label>
+            <label>Quality
+              <select id="resolution"><option value="1080">1080 × 1920</option><option value="720">720 × 1280 (faster)</option></select>
+            </label>
+          </div>
+
+          <fieldset><legend>Caption style</legend><div class="chips" id="styles"></div></fieldset>
+          <fieldset><legend>Framing</legend><div class="chips" id="layouts"></div></fieldset>
+
+          <div class="grid two">
+            <label>Highlight colour
+              <div class="color"><input id="accent" type="color" value="#FFE500"><code id="accentOut">#FFE500</code></div>
+            </label>
+            <label class="switch"><input id="hook" type="checkbox" checked><span>Big hook text in the first 3 seconds</span></label>
+          </div>
+          <label>What should the AI look for? <small>(optional)</small>
+            <input id="focus" type="text" maxlength="300" placeholder="e.g. funniest moments, money tips, emotional parts">
           </label>
-          <label>Quality
-            <select id="resolution"><option value="1080">1080 × 1920</option><option value="720">720 × 1280 (faster)</option></select>
-          </label>
-        </div>
+        </details>
 
-        <fieldset>
-          <legend>Caption style</legend>
-          <div class="chips" id="styles"></div>
-        </fieldset>
-        <fieldset>
-          <legend>Framing</legend>
-          <div class="chips" id="layouts"></div>
-        </fieldset>
+        <button class="go" id="go" type="submit"><span>Find my clips</span></button>
+        <p class="fine" id="limits">&nbsp;</p>
+        <p class="msg" id="msg" role="alert" aria-live="polite"></p>
+      </form>
 
-        <div class="grid two">
-          <label>Highlight colour
-            <div class="color"><input id="accent" type="color" value="#FFE500"><code id="accentOut">#FFE500</code></div>
-          </label>
-          <label class="switch">
-            <input id="hook" type="checkbox" checked>
-            <span>Big hook text in the first 3 seconds</span>
-          </label>
-        </div>
-        <label>What should the AI look for? <small>(optional)</small>
-          <input id="focus" type="text" maxlength="300" placeholder="e.g. funniest moments, money tips, emotional parts, Hindi hooks">
-        </label>
-      </details>
+      <section id="jobs" aria-live="polite"></section>
 
-      <button class="go" id="go" type="submit">
-        <span>Find my clips</span>
-      </button>
-      <p class="fine" id="limits">&nbsp;</p>
-      <p class="msg" id="msg" role="alert" aria-live="polite"></p>
-    </form>
+      <section class="how">
+        <h2>How it works</h2>
+        <ol>
+          <li><b>Listen</b><span>Every word is timed, so clips start and end on full sentences.</span></li>
+          <li><b>Pick</b><span>Your AI reads the transcript and scores moments a stranger would watch to the end.</span></li>
+          <li><b>Edit</b><span>Face-aware 9:16 crop, animated captions, hook text, loudness-matched audio.</span></li>
+          <li><b>Post</b><span>Download MP4 + SRT with a ready title, description and hashtags.</span></li>
+        </ol>
+      </section>
+    </section>
 
-    <section id="jobs" aria-live="polite"></section>
+    <!-- ============================ KEYS GUIDE ============================ -->
+    <section class="view hidden" data-view="keys">
+      <div class="hero small">
+        <h1>Get your own AI key</h1>
+        <p>AutoClip AI runs on <b>your</b> key, so it is free for you to use and nobody shares limits. Pick any provider below — it takes about two minutes.</p>
+      </div>
+      <div id="guide" class="guide"></div>
+      <div class="note">
+        <h3>Is my key safe?</h3>
+        <ul>
+          <li>It is stored only in this browser (unless you untick “Remember on this device”).</li>
+          <li>It travels over HTTPS with your job, lives in server memory while the job runs, and is deleted when it ends. It is never written to disk or logs.</li>
+          <li>Use a key you can revoke any time, and set a spend limit at the provider if they offer one.</li>
+          <li>Free tiers and prices are set by each provider and change; check their page before relying on them.</li>
+        </ul>
+      </div>
+    </section>
 
-    <section class="how">
-      <h2>How it works</h2>
-      <ol>
-        <li><b>Transcribe</b><span>Every word is timed, so clips start and end on full sentences.</span></li>
-        <li><b>Pick</b><span>Gemini reads the whole video and scores moments a stranger would watch to the end.</span></li>
-        <li><b>Edit</b><span>Face-aware 9:16 crop, animated captions, hook text, loudness-matched audio.</span></li>
-        <li><b>Post</b><span>Download the MP4, SRT and ready title, description and hashtags.</span></li>
-      </ol>
+    <!-- ============================ SPEECH ============================ -->
+    <section class="view hidden" data-view="speech">
+      <div class="hero small">
+        <h1>Speech models &amp; languages</h1>
+        <p>One multilingual speech model covers every language below. Install a bigger one on the server for better accuracy on Indian languages and noisy audio.</p>
+      </div>
+      <div id="sttList" class="stt"></div>
+      <h2 class="h2">Supported spoken languages</h2>
+      <div id="langList" class="chips static"></div>
+      <p class="hint" id="fontNote">Caption fonts for Hindi, Marathi, Gujarati, Bengali, Tamil, Telugu, Kannada, Malayalam, Punjabi, Urdu and Arabic are built in. Other scripts use the server's system fonts.</p>
     </section>
   </main>
 
@@ -139,6 +201,7 @@
         <li data-s="rendering">Editing clips</li>
       </ol>
       <p class="job-error hidden"></p>
+      <p class="job-note hidden"></p>
       <div class="clips"></div>
     </article>
   </template>
