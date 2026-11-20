@@ -172,9 +172,10 @@
     if (o.limits) {
       const parts = [];
       if (o.limits.daily && !o.unlimited) parts.push(`${o.limits.daily} free videos per day`);
-      parts.push(`up to ${o.limits.max_source_minutes} min`, `${o.limits.max_upload_mb} MB uploads`);
+      parts.push(o.limits.max_source_minutes ? `up to ${o.limits.max_source_minutes} min` : "any length",
+        o.limits.max_upload_mb ? `${o.limits.max_upload_mb} MB uploads` : "any file size");
       $("#limits").textContent = parts.join(" · ");
-      $("#dropHint").textContent = `MP4, MOV, MKV, WEBM · max ${o.limits.max_upload_mb} MB`;
+      $("#dropHint").textContent = `MP4, MOV, MKV, WEBM${o.limits.max_upload_mb ? " · max " + o.limits.max_upload_mb + " MB" : ""}`;
     }
   }
 
@@ -292,7 +293,9 @@
 
   // ---------------------------------------------------------------- local helper (downloads links on the user's PC)
   const HELPER = "http://127.0.0.1:8791";
-  const helper = { ok: false, cookies: "none" };
+  const helper = { ok: false, cookies: "none", desktop: false };
+  const DESKTOP = "http://127.0.0.1:8770";
+  const DESKTOP_ZIP = "https://github.com/Winplaybox/AutoClip-AI/releases/download/desktop-latest/AutoClipDesktop-win64.zip";
   async function hfetch(path, opt = {}, ms = 0) {
     const ctl = new AbortController();
     const t = ms ? setTimeout(() => ctl.abort(), ms) : null;
@@ -305,19 +308,32 @@
       helper.ok = !!(d && d.helper === "autoclip");
       helper.cookies = d.cookies || "none";
     } catch { helper.ok = false; }
+    try {
+      const dr = await (await fetch(DESKTOP + "/ping", { signal: AbortSignal.timeout(1500) })).json();
+      helper.desktop = !!(dr && dr.desktop === "autoclip");
+    } catch { helper.desktop = false; }
     const el = $("#helperHint");
     if (!el) return;
     el.textContent = "";
-    if (helper.ok) {
+    if (helper.desktop) {
+      el.style.color = "var(--positive)";
+      el.append("AutoClip Desktop is running on your PC: no limits, every layout and caption style. ");
+      const o = document.createElement("a");
+      o.href = DESKTOP; o.target = "_blank"; o.rel = "noopener noreferrer"; o.textContent = "Open AutoClip Desktop";
+      el.append(o);
+    } else if (helper.ok) {
       el.textContent = "Helper connected ✓ Links are downloaded on your computer, so YouTube does not block them.";
       el.style.color = "var(--positive)";
     } else {
       el.style.color = "";
-      el.append("YouTube often blocks downloads from our server. Run the ");
+      el.append("For YouTube links, long videos and all options, get ");
+      const d = document.createElement("a");
+      d.href = DESKTOP_ZIP; d.target = "_blank"; d.rel = "noopener noreferrer"; d.textContent = "AutoClip Desktop (Windows)";
+      el.append(d, " (no limits, runs on your PC). Or run the small ");
       const a = document.createElement("a");
       a.href = "https://github.com/Winplaybox/AutoClip-AI/releases/download/helper-latest/AutoClipHelper.exe"; a.target = "_blank"; a.rel = "noopener noreferrer";
-      a.textContent = "AutoClip Helper (Windows, one click)";
-      el.append(a, " on your PC to download links locally, or upload the video file (always works).");
+      a.textContent = "Helper";
+      el.append(a, ", or upload the video file (always works).");
     }
   }
   async function viaHelper(url, onStatus) {
@@ -421,7 +437,7 @@
         const f = fileIn.files[0];
         if (!f) { say("Choose a video file first."); return; }
         const maxMb = state.limits ? state.limits.max_upload_mb : 500;
-        if (f.size > maxMb * 1048576) { say(`File is larger than ${maxMb} MB.`); return; }
+        if (maxMb && f.size > maxMb * 1048576) { say(`File is larger than ${maxMb} MB.`); return; }
         created = await uploadJob(f, st, (p) => { $("span", go).textContent = `Uploading ${Math.round(p * 100)}%`; });
       }
       const rec = { id: created.job.id, token: created.token, created: Date.now() };
