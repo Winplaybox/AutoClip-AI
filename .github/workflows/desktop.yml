@@ -51,7 +51,9 @@ jobs:
             --add-data "desktop/engine/index.html;." --add-data "desktop/engine/mobile.html;." `
             --add-data "desktop/engine/app.js;." --add-data "desktop/engine/extras.js;." `
             --add-data "desktop/engine/transcripts.js;." --add-data "desktop/engine/vision.js;." `
-            --add-data "desktop/engine/style.css;." --add-data "desktop/engine/models;models" `
+            --add-data "desktop/engine/style.css;." --add-data "desktop/engine/ovd.css;." --add-data "desktop/engine/ovd.js;." `
+            --add-data "desktop/engine/theme.js;." --add-data "desktop/engine/donate.json;." --add-data "desktop/NEONCLIPPING-LICENSE;." `
+            --add-data "desktop/engine/fonts;fonts" --add-data "desktop/engine/models;models" `
             desktop/autoclip_desktop.py
 
       - name: Smoke test the built app (starts, serves UI, answers /ping)

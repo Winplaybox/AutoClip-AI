@@ -1,34 +1,35 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b0912"><meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0A0A0A"><meta name="color-scheme" content="light dark">
 <link rel="manifest" href="/manifest.webmanifest"><link rel="icon" href="/phone-icon.svg">
-<title>NeonClipping · phone</title>
+<title>AutoClip · phone</title>
 <style>
-:root{--bg:#0b0912;--panel:#171320;--line:#30263e;--pink:#ff4ba5;--cyan:#58e8f7;--lime:#d4fb58;--white:#fbf6ff;--muted:#a99db7}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--white);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:max(14px,env(safe-area-inset-top)) 14px max(24px,env(safe-area-inset-bottom))}
-h1{font-size:20px;margin:4px 0 2px;letter-spacing:.02em}h1 b{color:var(--pink)}.sub{color:var(--muted);font-size:13px;margin-bottom:14px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0}
+:root{--bg:#FFFFFF;--panel:#FFFFFF;--line:#E4E4E7;--pink:#0A0A0A;--cyan:#52525B;--lime:#0A0A0A;--white:#0A0A0A;--muted:#52525B;--alt:#F4F4F5;--on:#FFFFFF;--neg:#D92D3A}
+@media(prefers-color-scheme:dark){:root{--bg:#0A0A0A;--panel:#171717;--line:#2A2A2E;--pink:#FAFAFA;--cyan:#A1A1AA;--lime:#FAFAFA;--white:#FAFAFA;--muted:#A1A1AA;--alt:#1F1F22;--on:#0A0A0A;--neg:#FF6B75}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--white);font:16px/1.45 'Instrument Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:max(14px,env(safe-area-inset-top)) 14px max(24px,env(safe-area-inset-bottom))}
+h1{font:800 22px 'Bricolage Grotesque','Instrument Sans',system-ui,sans-serif;margin:4px 0 2px;letter-spacing:-.02em}h1 b{background:var(--pink);color:var(--on);padding:0 6px;border-radius:6px;margin-left:2px}.sub{color:var(--muted);font-size:13px;margin-bottom:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;margin:12px 0}
 label.f{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
-input[type=text],input[type=password],input[type=tel],select{width:100%;background:#0f0b18;color:var(--white);border:1px solid var(--line);border-radius:12px;padding:13px;font:inherit}
-button{font:inherit;border:0;border-radius:14px;padding:14px 16px;font-weight:700;color:#fff;background:#2b2140;width:100%}
-button.main{background:linear-gradient(90deg,var(--pink),#9a4bff)}button.red{background:#d4204a}button.ghost{background:transparent;border:1px solid var(--line);color:var(--white)}
+input[type=text],input[type=password],input[type=tel],select{width:100%;background:var(--alt);color:var(--white);border:1px solid var(--line);border-radius:12px;padding:13px;font:inherit}
+button{font:inherit;border:1px solid var(--line);border-radius:999px;padding:14px 16px;font-weight:700;color:var(--white);background:var(--panel);width:100%}
+button.main{background:var(--pink);color:var(--on);border-color:var(--pink)}button.red{background:var(--neg);color:#fff;border-color:var(--neg)}button.ghost{background:transparent;border:1px solid var(--line);color:var(--white)}
 button:disabled{opacity:.45}.row{display:flex;gap:8px}.row>*{flex:1}
-.seg button{padding:11px 6px;background:#0f0b18;border:1px solid var(--line);font-weight:600}.seg button.on{background:var(--pink);border-color:var(--pink)}
-.meter{height:16px;background:#0f0b18;border-radius:10px;overflow:hidden;border:1px solid var(--line)}.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--lime),#ff9a3c,#ff2d55);transition:width .5s}
-.big{font-size:22px;font-weight:800}.muted{color:var(--muted);font-size:13px}.err{color:#ff7a90;font-size:14px;margin-top:8px}
+.seg button{padding:11px 6px;background:var(--alt);border:1px solid var(--line);font-weight:600}.seg button.on{background:var(--pink);color:var(--on);border-color:var(--pink)}
+.meter{height:16px;background:var(--alt);border-radius:10px;overflow:hidden;border:1px solid var(--line)}.meter i{display:block;height:100%;width:0;background:var(--pink);transition:width .5s}
+.big{font-size:22px;font-weight:800}.muted{color:var(--muted);font-size:13px}.err{color:var(--neg);font-size:14px;margin-top:8px}
 .clips{display:grid;gap:12px}.clip video{width:100%;border-radius:12px;background:#000;aspect-ratio:9/16;max-height:62vh}
-.clip b{display:block;margin:8px 0 2px}.clip a{display:inline-block;margin-top:8px;padding:11px 16px;border-radius:12px;background:var(--lime);color:#111;text-decoration:none;font-weight:700;margin-right:8px}
+.clip b{display:block;margin:8px 0 2px}.clip a{display:inline-block;margin-top:8px;padding:11px 16px;border-radius:12px;background:var(--pink);color:var(--on);text-decoration:none;font-weight:700;margin-right:8px}
 .hide{display:none}.pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--cyan)}
 </style></head><body>
-<h1>Neon<b>Clipping</b> <span class="pill">phone remote</span></h1>
+<h1>Auto<b>Clip</b> <span class="pill">phone remote</span></h1>
 <div class="sub">The PC does the work. This screen controls it and plays your clips.</div>
 
 <div id="login" class="card hide">
   <b>Enter the PIN shown on your PC</b>
   <label class="f">6-digit PIN</label><input id="pin" type="tel" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="123456">
   <div style="margin-top:12px"><button class="main" id="pin-go">Connect</button></div><div class="err" id="pin-err"></div>
-  <p class="muted">On the PC: open NeonClipping, look at <b>Phone access</b> under Live clipping.</p>
+  <p class="muted">On the PC: open AutoClip, look at <b>Phone access</b> under Live clipping.</p>
 </div>
 
 <div id="app" class="hide">
@@ -95,7 +96,7 @@ function addClip(c){
   const v=document.createElement('video');v.src='/media/'+c.file;v.controls=true;v.playsInline=true;v.preload='metadata';
   const t=document.createElement('b');t.textContent=(c.title||'Clip')+(c.viral!=null?' · 🔥 '+c.viral:'');
   const w=document.createElement('div');w.className='muted';w.textContent=c.why||'';
-  const a=document.createElement('a');a.href='/media/'+c.file;a.download='neonclipping-'+c.file+'.mp4';a.textContent='↓ Save';
+  const a=document.createElement('a');a.href='/media/'+c.file;a.download='autoclip-'+c.file+'.mp4';a.textContent='↓ Save';
   d.append(v,t,w,a);
   if(navigator.share){const sb=document.createElement('a');sb.href='#';sb.textContent='Share';sb.style.background='#2b2140';sb.style.color='#fff';sb.onclick=async e=>{e.preventDefault();try{const blob=await (await fetch('/media/'+c.file)).blob();await navigator.share({files:[new File([blob],'clip.mp4',{type:'video/mp4'})],title:c.title||'Clip'});}catch(x){}};d.append(sb);}
   $('clips').prepend(d);$('count').textContent=shown.size+' this session';

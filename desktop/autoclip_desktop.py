@@ -46,6 +46,8 @@ def port_open(p: int) -> bool:
 
 
 def main() -> None:
+    if "--phone" in sys.argv:  # control AutoClip from a phone on the same Wi-Fi (PIN protected)
+        os.environ["NEONCLIPPING_LAN"] = "1"
     d = base_dir()
     os.environ.setdefault("NEONCLIPPING_DATA_DIR", str(d / "data"))
     os.environ.setdefault("NEONCLIPPING_PORT", str(PORT))
