@@ -12,7 +12,7 @@ SRC=/opt/anydownloader-src
 BKROOT=/root/backups
 SECRET_FILE=/etc/ovd-autoclip.secret
 DROPIN=/etc/systemd/system/$SVC.service.d/autoclip.conf
-RAW=${RAW:-https://raw.githubusercontent.com/Winplaybox/AutoClip-AI/main/deploy}
+RAW=https://raw.githubusercontent.com/Winplaybox/AutoClip-AI/main/deploy
 say() { printf '\n== %s\n' "$*"; }
 
 health_wait() {
