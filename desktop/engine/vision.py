@@ -1,3 +1,4 @@
+from atomicfile import write_text_atomic
 """Optional local image-model review of actual candidate frames.
 
 Frame descriptions are model observations, not verified game-event labels.
@@ -68,7 +69,7 @@ def review(source,start,duration,data,report=lambda text:None):
         description=describe(name,jpeg);(folder/(str(i)+'.jpg')).write_bytes(jpeg)
         observations.append({'time':at,'description':description,'image':f'/vision/frame/{key}/{i}'})
     result={'key':key,'model':name,'frames':observations,'seconds':round(time.monotonic()-began,2),'cached':False}
-    temp=path.with_suffix('.'+uuid.uuid4().hex+'.tmp');temp.write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8');temp.replace(path)
+    write_text_atomic(path,json.dumps(result,ensure_ascii=False,indent=2))
     return result
 
 def attach(app,data,state,probe):

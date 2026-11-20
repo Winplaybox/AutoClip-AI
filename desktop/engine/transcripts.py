@@ -1,3 +1,4 @@
+from atomicfile import write_text_atomic
 """Search a source transcript and choose passages without repeating highlight analysis."""
 import hashlib
 import json
@@ -45,7 +46,7 @@ def attach(app,data,state,probe,transcribe):
         st=path.stat();key=hashlib.sha256(f'{name}:{st.st_size}:{st.st_mtime_ns}:{language}'.encode()).hexdigest()
         return name,path,duration,language,key
     def write(key,record):
-        temp=folder/(key+'.tmp');temp.write_text(json.dumps(record,ensure_ascii=False),encoding='utf-8');temp.replace(folder/(key+'.json'))
+        write_text_atomic(folder/(key+'.json'),json.dumps(record,ensure_ascii=False))
     def read(key):
         if not key.isalnum():raise HTTPException(404,'Transcript not found.')
         p=folder/(key+'.json')
