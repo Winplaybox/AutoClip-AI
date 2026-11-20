@@ -1,0 +1,98 @@
+name: Build AutoClip Desktop (Windows)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["desktop/**", ".github/workflows/desktop.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip pyinstaller pytest httpx
+          python -m pip install -r desktop/engine/requirements.txt
+
+      - name: Unit tests
+        shell: bash
+        working-directory: desktop
+        env:
+          PYTHONPATH: engine
+        run: python -m pytest tests -q --ignore=tests/test_live.py
+
+      - name: Build app folder (PyInstaller)
+        shell: pwsh
+        run: |
+          python -m PyInstaller --noconfirm --onedir --name AutoClipDesktop `
+            --paths desktop/engine `
+            --collect-all yt_dlp --collect-all faster_whisper --collect-all ctranslate2 `
+            --collect-all streamlink --collect-submodules uvicorn `
+            --add-data "desktop/engine/index.html;." --add-data "desktop/engine/mobile.html;." `
+            --add-data "desktop/engine/app.js;." --add-data "desktop/engine/extras.js;." `
+            --add-data "desktop/engine/transcripts.js;." --add-data "desktop/engine/vision.js;." `
+            --add-data "desktop/engine/style.css;." --add-data "desktop/engine/models;models" `
+            desktop/autoclip_desktop.py
+
+      - name: Smoke test the built app (starts, serves UI, answers /ping)
+        shell: pwsh
+        run: |
+          $env:AUTOCLIP_NO_BROWSER = "1"; $env:AUTOCLIP_PORT = "8799"
+          $env:LOCALAPPDATA = "$PWD\smoke"; New-Item -ItemType Directory -Force smoke | Out-Null
+          $p = Start-Process -FilePath dist/AutoClipDesktop/AutoClipDesktop.exe -PassThru -WindowStyle Hidden
+          $ok = $false
+          for ($i = 0; $i -lt 90; $i++) {
+            Start-Sleep -Seconds 2
+            try { $r = Invoke-RestMethod -Uri http://127.0.0.1:8799/ping -Headers @{Origin="https://winplaybox.github.io"}; if ($r.desktop -eq "autoclip") { $ok = $true; break } } catch {}
+          }
+          if (-not $ok) { throw "desktop app never answered /ping" }
+          $page = Invoke-WebRequest -Uri http://127.0.0.1:8799/ -UseBasicParsing
+          if ($page.Content -notmatch "AutoClip") { throw "UI not served" }
+          $ai = Invoke-RestMethod -Uri http://127.0.0.1:8799/api/ai
+          if ($ai.configured -ne $false) { throw "ai settings endpoint failed" }
+          Stop-Process -Id $p.Id -Force
+
+      - name: Zip
+        shell: pwsh
+        run: Compress-Archive -Path dist/AutoClipDesktop -DestinationPath AutoClipDesktop-win64.zip
+
+      - id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: AutoClipDesktop-unsigned
+          path: AutoClipDesktop-win64.zip
+
+      # Free code signing for open source by SignPath Foundation. Skipped until the repo owner has
+      # been approved and set the SIGNPATH_* variables/secret (see docs/CODE_SIGNING.md).
+      - name: Sign with SignPath
+        id: sign
+        if: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' && github.ref == 'refs/heads/main' }}
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: autoclip-ai
+          signing-policy-slug: release-signing
+          github-artifact-id: ${{ steps.upload.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed
+
+      - name: Publish release "desktop-latest"
+        if: github.ref == 'refs/heads/main'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $f = "AutoClipDesktop-win64.zip"
+          if (Test-Path "signed/AutoClipDesktop-win64.zip") { $f = "signed/AutoClipDesktop-win64.zip" }
+          gh release delete desktop-latest --yes --cleanup-tag 2>$null
+          gh release create desktop-latest $f --title "AutoClip Desktop (Windows)" --notes "Unzip, run AutoClipDesktop.exe. Runs on your PC: no upload, no limits." --target ${{ github.sha }}
