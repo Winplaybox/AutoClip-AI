@@ -290,6 +290,56 @@
     if (busy) speechTimer = setTimeout(loadSpeech, 4000);
   }
 
+  // ---------------------------------------------------------------- local helper (downloads links on the user's PC)
+  const HELPER = "http://127.0.0.1:8791";
+  const helper = { ok: false, cookies: "none" };
+  async function hfetch(path, opt = {}, ms = 0) {
+    const ctl = new AbortController();
+    const t = ms ? setTimeout(() => ctl.abort(), ms) : null;
+    try { return await fetch(HELPER + path, { ...opt, signal: ctl.signal }); } finally { if (t) clearTimeout(t); }
+  }
+  async function pingHelper() {
+    try {
+      const r = await hfetch("/ping", {}, 1500);
+      const d = await r.json();
+      helper.ok = !!(d && d.helper === "autoclip");
+      helper.cookies = d.cookies || "none";
+    } catch { helper.ok = false; }
+    const el = $("#helperHint");
+    if (!el) return;
+    el.textContent = "";
+    if (helper.ok) {
+      el.textContent = "Helper connected ✓ Links are downloaded on your computer, so YouTube does not block them.";
+      el.style.color = "var(--positive)";
+    } else {
+      el.style.color = "";
+      el.append("YouTube often blocks downloads from our server. Run the ");
+      const a = document.createElement("a");
+      a.href = "https://github.com/Winplaybox/AutoClip-AI/tree/main/helper"; a.target = "_blank"; a.rel = "noopener noreferrer";
+      a.textContent = "AutoClip Helper";
+      el.append(a, " on your PC to download links locally, or upload the video file (always works).");
+    }
+  }
+  async function viaHelper(url, onStatus) {
+    let r;
+    try { r = await hfetch("/download", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url }) }); }
+    catch { throw new Error("Lost connection to the helper. Is it still running?"); }
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || "Helper refused the link.");
+    for (;;) {
+      await new Promise((res) => setTimeout(res, 1000));
+      let s;
+      try { s = await (await hfetch("/status/" + d.id)).json(); } catch { throw new Error("Lost connection to the helper. Is it still running?"); }
+      if (s.status === "failed") throw new Error(s.error || "Download failed.");
+      if (s.status === "done") { onStatus(`Fetching from your PC…`); break; }
+      onStatus(`Downloading on your PC ${Math.round((s.progress || 0) * 100)}%`);
+    }
+    const res = await hfetch("/file/" + d.id);
+    if (!res.ok) throw new Error("Could not read the downloaded file from the helper.");
+    const blob = await res.blob();
+    return new File([blob], "video.mp4", { type: "video/mp4" });
+  }
+
   // ---------------------------------------------------------------- form
   let mode = "file";
   $$(".tab").forEach((t) => t.addEventListener("click", () => {
@@ -360,8 +410,13 @@
       if (mode === "link") {
         const url = $("#url").value.trim();
         if (!/^https?:\/\//i.test(url)) { say("Paste a full video link starting with https://"); return; }
-        $("span", go).textContent = "Sending…";
-        created = await api("/jobs", { method: "POST", body: { url, settings: st, ...aiPayload() } });
+        if (helper.ok) {
+          const f = await viaHelper(url, (t) => { $("span", go).textContent = t; });
+          created = await uploadJob(f, st, (p) => { $("span", go).textContent = `Uploading ${Math.round(p * 100)}%`; });
+        } else {
+          $("span", go).textContent = "Sending…";
+          created = await api("/jobs", { method: "POST", body: { url, settings: st, ...aiPayload() } });
+        }
       } else {
         const f = fileIn.files[0];
         if (!f) { say("Choose a video file first."); return; }
@@ -518,6 +573,8 @@
     store.set("ac_jobs", recent);
     renderGuide();
     loadAI();
+    pingHelper();
+    setInterval(pingHelper, 8000);
     route();
     await Promise.all([checkHealth(), loadOptions()]);
     if (!$('[data-view="speech"]').classList.contains("hidden")) loadSpeech();
