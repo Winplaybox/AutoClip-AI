@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>AutoClip AI — turn long videos into viral Shorts | WinPlayBox</title>
+  <meta name="description" content="Paste a YouTube link or upload a video. AutoClip AI finds the best moments, crops them to 9:16, adds animated captions and a hook, and writes titles and hashtags. Free.">
+  <meta name="theme-color" content="#0E0F13">
+  <meta property="og:title" content="AutoClip AI — long video to Shorts in one click">
+  <meta property="og:description" content="AI picks the best moments, crops to 9:16, adds captions + hook. Free by WinPlayBox.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="config.js"></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="./" aria-label="AutoClip AI home">
+      <img src="assets/favicon.svg" alt="" width="28" height="28">
+      <span>AutoClip <b>AI</b></span>
+    </a>
+    <div class="status" id="status" title="Server status"><i></i><span>Checking…</span></div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Long video in. <span>Viral Shorts</span> out.</h1>
+      <p>AI finds the moments worth posting, crops them to 9:16, adds animated captions and a hook, and writes the title and hashtags.</p>
+    </section>
+
+    <form id="form" class="card" novalidate>
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" class="tab active" data-tab="link" aria-selected="true">Paste link</button>
+        <button type="button" role="tab" class="tab" data-tab="file" aria-selected="false">Upload file</button>
+      </div>
+
+      <div class="pane" data-pane="link">
+        <label class="sr" for="url">Video link</label>
+        <input id="url" type="url" inputmode="url" autocomplete="off" placeholder="https://www.youtube.com/watch?v=…  (YouTube, Twitch, Kick, Vimeo, Instagram…)">
+      </div>
+      <div class="pane hidden" data-pane="file">
+        <label class="drop" id="drop">
+          <input id="file" type="file" accept="video/*,.mkv,.ts,.flv">
+          <span class="drop-icon" aria-hidden="true">⬆</span>
+          <span id="dropText">Drop a video here or <u>browse</u></span>
+          <small id="dropHint">MP4, MOV, MKV, WEBM</small>
+        </label>
+      </div>
+
+      <details class="opts" open>
+        <summary>Clip settings</summary>
+        <div class="grid">
+          <label>Clips
+            <div class="range"><input id="maxClips" type="range" min="1" max="12" value="5"><output id="maxClipsOut">5</output></div>
+          </label>
+          <label>Length (seconds)
+            <div class="pair">
+              <input id="minLen" type="number" min="8" max="90" value="20" aria-label="Minimum length">
+              <span>to</span>
+              <input id="maxLen" type="number" min="15" max="180" value="60" aria-label="Maximum length">
+            </div>
+          </label>
+          <label>Spoken language
+            <select id="language"></select>
+          </label>
+          <label>Quality
+            <select id="resolution"><option value="1080">1080 × 1920</option><option value="720">720 × 1280 (faster)</option></select>
+          </label>
+        </div>
+
+        <fieldset>
+          <legend>Caption style</legend>
+          <div class="chips" id="styles"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Framing</legend>
+          <div class="chips" id="layouts"></div>
+        </fieldset>
+
+        <div class="grid two">
+          <label>Highlight colour
+            <div class="color"><input id="accent" type="color" value="#FFE500"><code id="accentOut">#FFE500</code></div>
+          </label>
+          <label class="switch">
+            <input id="hook" type="checkbox" checked>
+            <span>Big hook text in the first 3 seconds</span>
+          </label>
+        </div>
+        <label>What should the AI look for? <small>(optional)</small>
+          <input id="focus" type="text" maxlength="300" placeholder="e.g. funniest moments, money tips, emotional parts, Hindi hooks">
+        </label>
+      </details>
+
+      <button class="go" id="go" type="submit">
+        <span>Find my clips</span>
+      </button>
+      <p class="fine" id="limits">&nbsp;</p>
+      <p class="msg" id="msg" role="alert" aria-live="polite"></p>
+    </form>
+
+    <section id="jobs" aria-live="polite"></section>
+
+    <section class="how">
+      <h2>How it works</h2>
+      <ol>
+        <li><b>Transcribe</b><span>Every word is timed, so clips start and end on full sentences.</span></li>
+        <li><b>Pick</b><span>Gemini reads the whole video and scores moments a stranger would watch to the end.</span></li>
+        <li><b>Edit</b><span>Face-aware 9:16 crop, animated captions, hook text, loudness-matched audio.</span></li>
+        <li><b>Post</b><span>Download the MP4, SRT and ready title, description and hashtags.</span></li>
+      </ol>
+    </section>
+  </main>
+
+  <footer>
+    <span>By <a href="https://winplaybox.in" rel="noopener">WinPlayBox</a></span>
+    <span>Files are deleted automatically after 24 hours.</span>
+    <a href="https://github.com/Winplaybox/AutoClip-AI" rel="noopener">Source</a>
+  </footer>
+
+  <template id="jobTpl">
+    <article class="job card">
+      <header class="job-head">
+        <div>
+          <h3 class="job-title">Preparing…</h3>
+          <p class="job-sub"></p>
+        </div>
+        <div class="job-actions">
+          <a class="btn ghost zip hidden" href="#">Download all (.zip)</a>
+          <button class="btn ghost cancel" type="button">Cancel</button>
+          <button class="btn ghost remove hidden" type="button" aria-label="Remove from list">✕</button>
+        </div>
+      </header>
+      <div class="progress"><div class="bar"><i></i></div><span class="pct">0%</span></div>
+      <ol class="steps">
+        <li data-s="fetching">Getting video</li>
+        <li data-s="transcribing">Listening</li>
+        <li data-s="finding">Finding moments</li>
+        <li data-s="rendering">Editing clips</li>
+      </ol>
+      <p class="job-error hidden"></p>
+      <div class="clips"></div>
+    </article>
+  </template>
+
+  <template id="clipTpl">
+    <div class="clip">
+      <div class="player">
+        <video preload="none" playsinline controls></video>
+        <span class="score" title="AI score: chance a stranger watches to the end"></span>
+        <span class="len"></span>
+      </div>
+      <div class="meta">
+        <p class="hook"></p>
+        <div class="field"><label>Title</label><p class="title"></p><button type="button" class="copy" data-copy="title">Copy</button></div>
+        <div class="field"><label>Description</label><p class="desc"></p><button type="button" class="copy" data-copy="desc">Copy</button></div>
+        <p class="why"></p>
+        <div class="dl">
+          <a class="btn primary mp4">Download MP4</a>
+          <a class="btn ghost srt">SRT</a>
+        </div>
+      </div>
+    </div>
+  </template>
+</body>
+</html>
