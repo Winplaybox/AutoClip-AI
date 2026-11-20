@@ -172,9 +172,10 @@
     if (o.limits) {
       const parts = [];
       if (o.limits.daily && !o.unlimited) parts.push(`${o.limits.daily} free videos per day`);
-      parts.push(`up to ${o.limits.max_source_minutes} min`, `${o.limits.max_upload_mb} MB uploads`);
+      parts.push(o.limits.max_source_minutes ? `up to ${o.limits.max_source_minutes} min` : "any length",
+        o.limits.max_upload_mb ? `${o.limits.max_upload_mb} MB uploads` : "any file size");
       $("#limits").textContent = parts.join(" · ");
-      $("#dropHint").textContent = `MP4, MOV, MKV, WEBM · max ${o.limits.max_upload_mb} MB`;
+      $("#dropHint").textContent = `MP4, MOV, MKV, WEBM${o.limits.max_upload_mb ? " · max " + o.limits.max_upload_mb + " MB" : ""}`;
     }
   }
 
@@ -436,7 +437,7 @@
         const f = fileIn.files[0];
         if (!f) { say("Choose a video file first."); return; }
         const maxMb = state.limits ? state.limits.max_upload_mb : 500;
-        if (f.size > maxMb * 1048576) { say(`File is larger than ${maxMb} MB.`); return; }
+        if (maxMb && f.size > maxMb * 1048576) { say(`File is larger than ${maxMb} MB.`); return; }
         created = await uploadJob(f, st, (p) => { $("span", go).textContent = `Uploading ${Math.round(p * 100)}%`; });
       }
       const rec = { id: created.job.id, token: created.token, created: Date.now() };
