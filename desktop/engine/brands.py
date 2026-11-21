@@ -1,3 +1,4 @@
+from atomicfile import write_text_atomic
 """Local caption appearance presets. No fonts or user data are uploaded."""
 import json
 import math
@@ -49,6 +50,6 @@ def attach(app,data):
                 profiles=read()
                 if name not in profiles and len(profiles)>=50:raise ValueError('At most 50 profiles can be saved.')
                 profiles[name]=config;path.parent.mkdir(parents=True,exist_ok=True)
-                temp=path.with_suffix('.tmp');temp.write_text(json.dumps(profiles,ensure_ascii=False,indent=2),encoding='utf-8');temp.replace(path)
+                write_text_atomic(path,json.dumps(profiles,ensure_ascii=False,indent=2))
             return {'name':name,'settings':config}
         except (ValueError,TypeError,OverflowError,AttributeError) as error:raise HTTPException(400,str(error))

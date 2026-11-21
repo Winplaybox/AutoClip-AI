@@ -8,6 +8,7 @@ import time
 import subprocess
 import yt_dlp
 from fastapi import HTTPException
+from atomicfile import write_text_atomic
 from highlights import rank
 import smart
 from previews import prepare
@@ -23,7 +24,7 @@ def attach(app,DATA,state,probe):
         with lock:
             record={**state.get(job,{}),**record}
             state[job]=record
-            temp=DATA/(job+'.state.tmp');temp.write_text(json.dumps(record),encoding='utf-8');temp.replace(DATA/(job+'.state.json'))
+            write_text_atomic(DATA/(job+'.state.json'),json.dumps(record),best_effort=True)
     # Completed work survives a restart; active work reports interruption.
     for f in DATA.glob('*.state.json'):
         try:

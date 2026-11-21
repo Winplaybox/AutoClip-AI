@@ -1,3 +1,4 @@
+from atomicfile import write_text_atomic
 """Creator list: remember streamers, notice when they go live, and start live clipping for them automatically.
 
 The list is stored in data/creators.store. A background thread checks every CHECK_EVERY seconds whether a creator
@@ -81,9 +82,7 @@ def attach(app, data, live, start_live):
             return []
 
     def save(rows):
-        tmp = path.with_suffix('.tmp')
-        tmp.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding='utf-8')
-        tmp.replace(path)
+        write_text_atomic(path, json.dumps(rows, ensure_ascii=False, indent=2))
 
     def clip_counts():
         counts = {}

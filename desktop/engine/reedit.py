@@ -1,3 +1,4 @@
+from atomicfile import write_text_atomic
 """Native saved-clip editing. Never download, discover moments or invoke ASR here."""
 import json
 import math
@@ -179,8 +180,7 @@ def attach(app,data,state,probe,export,save):
                     result=state[child]
                     if result['status']!='done':raise RuntimeError(result.get('error','Export failed'))
                     old['superseded_by']=child
-                    path=data/(file+'.json');temp=path.with_suffix('.json.tmp')
-                    temp.write_text(json.dumps(old,ensure_ascii=False,indent=2),encoding='utf-8');temp.replace(path)
+                    path=data/(file+'.json');write_text_atomic(path,json.dumps(old,ensure_ascii=False,indent=2))
                     clips.append({'file':child,'previous':file,'was':ancestors(data,file),'title':settings.get('title','Edited clip'),'srt':result.get('srt')})
                     save(job,{'clips':clips,'progress':(i+1)/len(prepared),'stage':f'Updated {i+1}/{len(prepared)}'})
                 save(job,{'status':'done','stage':'Edits applied','elapsed_seconds':round(time.monotonic()-began,2)})
